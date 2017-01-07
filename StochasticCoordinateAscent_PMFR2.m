@@ -1,4 +1,4 @@
-function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, prior, ini_scale, usr_batch_size, alpha, delta, kappa, topK, test_size, test_step, ini, MaxItr, check_step)
+function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, prior, ini_scale, usr_batch_size, C, alpha, delta, kappa, topK, test_size, test_step, ini, MaxItr, check_step)
     %
     % Coordinate Ascent Algorithm
     %
@@ -227,11 +227,11 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 
                 tmp1 = exp_diff_predict_xij_f ./ (1 + exp_diff_predict_xij_f);
                 tmp1(isnan(tmp1)) = 1;
-                partial_1_diff_predict_xij_f = - 1/length(vec_matX_u) * (-delta * sum((mask > 0) .* tmp1, 2));
+                partial_1_diff_predict_xij_f = - C/length(vec_matX_u) * (-delta * sum((mask > 0) .* tmp1, 2));
                 
                 tmp2 = exp_diff_predict_xij_f ./ (1 + exp_diff_predict_xij_f).^2;
                 tmp2(isnan(tmp2)) = 0;
-                partial_2_diff_predict_xij_f = - 1/length(vec_matX_u) * (delta^2 * sum((mask > 0) .* tmp2, 2));
+                partial_2_diff_predict_xij_f = - C/length(vec_matX_u) * (delta^2 * sum((mask > 0) .* tmp2, 2));
                 
                 
                 % calculate (i, h) = \hat{s}_{ui} - \hat{x}_{uh}  for g(x): x_{uh} > x_{ui}
@@ -240,11 +240,11 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 
                 tmp1 = exp_diff_predict_xij_g ./ (1 + exp_diff_predict_xij_g);
                 tmp1(isnan(tmp1)) = 1;
-                partial_1_diff_predict_xij_g = - 1/length(vec_matX_u) * (delta * sum((mask < 0) .* tmp1, 2));
+                partial_1_diff_predict_xij_g = - C/length(vec_matX_u) * (delta * sum((mask < 0) .* tmp1, 2));
                 
                 tmp2 = exp_diff_predict_xij_g ./ (1 + exp_diff_predict_xij_g).^2;
                 tmp2(isnan(tmp2)) = 0;
-                partial_2_diff_predict_xij_g = - 1/length(vec_matX_u) * (delta^2 * sum((mask < 0) .* tmp2, 2));
+                partial_2_diff_predict_xij_g = - C/length(vec_matX_u) * (delta^2 * sum((mask < 0) .* tmp2, 2));
                 
                 
                 % Compute logisitic(\hat{x}_{ui}) for all nonzero x_{ui}

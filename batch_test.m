@@ -54,7 +54,7 @@ global best_TestLogLikelihhod
 global bestVlog_likelihood
 
 TEST_TYPE = 5;
-ENV = 3;
+ENV = 1;
 models = {'pointPRPF', 'pairPRPF', 'HPF', 'BPR', 'ListPMF', 'LorSLIM', 'RecomMC', 'PMF', 'BPMF', 'NMF', 'LogMF'};
 test_size = 1;
 
@@ -256,6 +256,15 @@ elseif TEST_TYPE == 5
     % 3,980 movies
     % 1 million ratings
     meta_info = 'MovieLens1M';
+        
+    if ENV == 1
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/MovieLens1M_train.csv', '/Users/iankuoli/Dataset/MovieLens1M_test.csv', '/Users/iankuoli/Dataset/MovieLens1M_valid.csv');
+    elseif ENV == 2
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/MovieLens1M_train.csv', '/home/iankuoli/dataset/MovieLens1M_test.csv', '/home/iankuoli/dataset/MovieLens1M_valid.csv');
+    elseif ENV == 3
+        [ M, N ] = LoadUtilities('/home/csist/Dataset/MovieLens1M_train.csv', '/home/csist/Dataset/MovieLens1M_test.csv', '/home/csist/Dataset/MovieLens1M_valid.csv');
+    else
+    end  
     
     if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
         % from BNPF, theta=Gamma(1, 0.3/0.3); beta=Gamma(0.3, 0.3/1)
@@ -270,6 +279,7 @@ elseif TEST_TYPE == 5
         kappa = 0.5;
         delta = 0.5;
         alpha = 3;
+        C = mean(sum(matX>0,2));
         if strcmp(run_model, 'pairPRPF')
             type_model = 3;
         elseif strcmp(run_model, 'pointPRPF')
@@ -320,16 +330,7 @@ elseif TEST_TYPE == 5
         MaxItr = 50000;
         check_step = 500;
         
-    end
-    
-    if ENV == 1
-        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/MovieLens1M_train.csv', '/Users/iankuoli/Dataset/MovieLens1M_test.csv', '/Users/iankuoli/Dataset/MovieLens1M_valid.csv');
-    elseif ENV == 2
-        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/MovieLens1M_train.csv', '/home/iankuoli/dataset/MovieLens1M_test.csv', '/home/iankuoli/dataset/MovieLens1M_valid.csv');
-    elseif ENV == 3
-        [ M, N ] = LoadUtilities('/home/csist/Dataset/MovieLens1M_train.csv', '/home/csist/Dataset/MovieLens1M_test.csv', '/home/csist/Dataset/MovieLens1M_valid.csv');
-    else
-    end    
+    end  
 elseif TEST_TYPE == 0
     % Read Toy-graph
     meta_info = 'toy';
@@ -433,7 +434,7 @@ if strcmp(run_model, 'pointPRPF')
     best_TestPrecRecall_pointPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
         best_TestPrecRecall_pointPRPF(ik, 1:length(topK)*2) = best_TestPrecRecall_precision;
@@ -450,7 +451,7 @@ if strcmp(run_model, 'pairPRPF')
     best_TestPrecRecall_pairPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         %LogisticPF(type_model, K, prior, ini_scale, batch_size, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
@@ -468,7 +469,7 @@ if strcmp(run_model, 'HPF')
     best_TestPrecRecall_pairPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
         best_TestPrecRecall_pairPRPF(ik, 1:length(topK)*2) = best_TestPrecRecall_precision;
