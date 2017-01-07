@@ -96,7 +96,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
         matTheta_Shp(zero_idx_usr(:,1),:) = 0;
         matTheta(zero_idx_usr(:,1),:) = 0;
         zero_idx_itm = sum(matX,1)==0;
-        matTheta_Shp(zero_idx_itm(:,1),:) = 0;
+        matBeta_Shp(zero_idx_itm(:,1),:) = 0;
         matBeta(zero_idx_itm(:,1),:) = 0;
     end
 
@@ -128,16 +128,23 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
         %
         % Sample data
         %
-        if usr_batch_size == size(matX,1)
-            usr_idx = 1:size(matX,1);
+        if usr_batch_size == M
+            usr_idx = 1:M;
+            itm_idx = 1:N;
+            usr_idx_len = M;
+            itm_idx_len = N;
         else
-            usr_idx = randsample(size(matX,1), usr_batch_size);
-            usr_idx(sum(matX(usr_idx,:),2)==0) = [];
+            if usr_batch_size == size(matX,1)
+                usr_idx = 1:size(matX,1);
+            else
+                usr_idx = randsample(size(matX,1), usr_batch_size);
+                usr_idx(sum(matX(usr_idx,:),2)==0) = [];
+            end
+
+            itm_idx = find(sum(matX(usr_idx, :))>0);
+            usr_idx_len = length(usr_idx);
+            itm_idx_len = length(itm_idx);
         end
-        
-        itm_idx = find(sum(matX(usr_idx, :))>0);
-        usr_idx_len = length(usr_idx);
-        itm_idx_len = length(itm_idx);
         
         fprintf('\nIndex: %d  ---------------------------------- %d , %d , lr: %f \n', i, usr_idx_len, itm_idx_len, lr);
         
@@ -205,7 +212,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 
                 % s: the position for taylor expansion
                 %vec_s = vec_predict_X_u(sort_max_idxs(i_tmp));
-                vec_s = vec_predict_X_u(sort_max_idxs(i_tmp));
+                vec_s = vec_predict_X_u(sort_max_idxs2(i_tmp));
                 %vec_s = (sum(vec_predict_X_u) * ones(1, length(js)) - vec_predict_X_u) / (length(vec_predict_X_u)-1);
                 %vec_s = vec_prior_X_u;
                 
@@ -220,11 +227,11 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 
                 tmp1 = exp_diff_predict_xij_f ./ (1 + exp_diff_predict_xij_f);
                 tmp1(isnan(tmp1)) = 1;
-                partial_1_diff_predict_xij_f = -(-delta * sum((mask > 0) .* tmp1, 2));
+                partial_1_diff_predict_xij_f = - 1/length(vec_matX_u) * (-delta * sum((mask > 0) .* tmp1, 2));
                 
                 tmp2 = exp_diff_predict_xij_f ./ (1 + exp_diff_predict_xij_f).^2;
                 tmp2(isnan(tmp2)) = 0;
-                partial_2_diff_predict_xij_f = -(delta^2 * sum((mask > 0) .* tmp2, 2));
+                partial_2_diff_predict_xij_f = - 1/length(vec_matX_u) * (delta^2 * sum((mask > 0) .* tmp2, 2));
                 
                 
                 % calculate (i, h) = \hat{s}_{ui} - \hat{x}_{uh}  for g(x): x_{uh} > x_{ui}
@@ -233,11 +240,11 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 
                 tmp1 = exp_diff_predict_xij_g ./ (1 + exp_diff_predict_xij_g);
                 tmp1(isnan(tmp1)) = 1;
-                partial_1_diff_predict_xij_g = -(delta * sum((mask < 0) .* tmp1, 2));
+                partial_1_diff_predict_xij_g = - 1/length(vec_matX_u) * (delta * sum((mask < 0) .* tmp1, 2));
                 
                 tmp2 = exp_diff_predict_xij_g ./ (1 + exp_diff_predict_xij_g).^2;
                 tmp2(isnan(tmp2)) = 0;
-                partial_2_diff_predict_xij_g = -(delta^2 * sum((mask < 0) .* tmp2, 2));
+                partial_2_diff_predict_xij_g = - 1/length(vec_matX_u) * (delta^2 * sum((mask < 0) .* tmp2, 2));
                 
                 
                 % Compute logisitic(\hat{x}_{ui}) for all nonzero x_{ui}
@@ -248,13 +255,9 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
                 partial_2_diff_predict_xij_h(isnan(partial_2_diff_predict_xij_h)) = 1;
                 
                 l_function_s = (partial_2_diff_predict_xij_f + partial_2_diff_predict_xij_g + ...
-                                alpha * (matX(u_idx, itm_idx(js))' .* partial_2_diff_predict_xij_h));
-                               %alpha * partial_2_diff_predict_xij_h);
-                               %alpha * (matX(u_idx, itm_idx(js))' .* partial_2_diff_predict_xij_h));
+                               alpha * (matX(u_idx, itm_idx(js))' .* partial_2_diff_predict_xij_h));
                 h_function_s = (partial_1_diff_predict_xij_f + partial_1_diff_predict_xij_g + ...
-                                alpha * (matX(u_idx, itm_idx(js))' .* partial_1_diff_predict_xij_h) + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
-                               %alpha * partial_1_diff_predict_xij_h + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
-                               %alpha * (matX(u_idx, itm_idx(js))' .* partial_1_diff_predict_xij_h) + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
+                               alpha * (matX(u_idx, itm_idx(js))' .* partial_1_diff_predict_xij_h) + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
                 %(wrong) h_function_s = (partial_1_diff_predict_xij_f + partial_1_diff_predict_xij_g + (1 - vec_s') .* l_function_s) - log(vec_prior_X_u)';
 
                 W_tmp = -l_function_s .* exp(h_function_s);
@@ -393,7 +396,11 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
         %
         % Update matBeta_Shp , matBeta_Rte, matBeta
         %
-        scale1 = sum(matX(:, itm_idx) > 0, 1)' ./ sum(matX(usr_idx, itm_idx) > 0, 1)';
+        if usr_batch_size == M
+            scale1 = ones(N, 1);
+        else
+            scale1 = sum(matX(:, itm_idx) > 0, 1)' ./ sum(matX(usr_idx, itm_idx) > 0, 1)';
+        end
           
         matBeta_Shp(itm_idx, :) = (1 - lr) * matBeta_Shp(itm_idx, :) + ...
                                   lr * (d + bsxfun(@times, cell2mat(cellfun(@(x) sum(predict_X .* x, 1)', tensorPhi, 'UniformOutput', false)), scale1));
@@ -598,7 +605,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR2(type_model, k, pr
             fprintf('\nObjFunc: %f \n', obj_func);
         end
         
-        if mod(i,5) == 0
+        if mod(i,1) == 0
             %plot(matTheta(1:50,:));figure(gcf);
             
             %plot(matTheta);figure(gcf);
