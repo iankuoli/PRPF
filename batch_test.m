@@ -70,6 +70,16 @@ if TEST_TYPE == 1
     % Read Last.fm data (User-Item-Word)
     meta_info = 'LastFm';
     
+    if ENV == 1           
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/LastFm_train.csv', '/Users/iankuoli/Dataset/LastFm_test.csv', '/Users/iankuoli/Dataset/LastFm_valid.csv');
+    elseif ENV == 2
+        %
+        % 1585, 1879 are zero entries in test set.
+        %
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/LastFm_train.csv', '/home/iankuoli/dataset/LastFm_test.csv', '/home/iankuoli/dataset/LastFm_valid.csv');
+    else
+    end
+    
     if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
         prior = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
         ini_scale = prior(1)/100;
@@ -140,16 +150,6 @@ if TEST_TYPE == 1
         check_step = 400;
         
     end
-    
-    if ENV == 1           
-        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/LastFm_train.csv', '/Users/iankuoli/Dataset/LastFm_test.csv', '/Users/iankuoli/Dataset/LastFm_valid.csv');
-    elseif ENV == 2
-        %
-        % 1585, 1879 are zero entries in test set.
-        %
-        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/LastFm_train.csv', '/home/iankuoli/dataset/LastFm_test.csv', '/home/iankuoli/dataset/LastFm_valid.csv');
-    else
-    end
 elseif TEST_TYPE == 2
 
     % ----- The Echo Nest Taste Profile Subset -----
@@ -157,6 +157,12 @@ elseif TEST_TYPE == 2
     % 384,546 unique MSD songs
     % 48,373,586 user - song - play count triplets
     meta_info = 'EchoNest';
+    
+    if ENV == 1
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/EchoNest_train.csv', '/Users/iankuoli/Dataset/EchoNest_test.csv', '/Users/iankuoli/Dataset/EchoNest_valid.csv');
+    elseif ENV == 2
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/EchoNest_train.csv', '/home/iankuoli/dataset/EchoNest_test.csv', '/home/iankuoli/dataset/EchoNest_valid.csv');
+    end
     
     if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
         prior = [0.3, 0.3, 0.3, 0.3, 0.3, ...
@@ -206,12 +212,6 @@ elseif TEST_TYPE == 2
     elseif strcmp(run_model, 'NMF')
         
     end
-
-    if ENV == 1
-        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/EchoNest_train.csv', '/Users/iankuoli/Dataset/EchoNest_test.csv', '/Users/iankuoli/Dataset/EchoNest_valid.csv');
-    elseif ENV == 2
-        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/EchoNest_train.csv', '/home/iankuoli/dataset/EchoNest_test.csv', '/home/iankuoli/dataset/EchoNest_valid.csv');
-    end
 elseif TEST_TYPE == 3
     % ----- MovieLens 20M Dataset -----
     % 138,000 users
@@ -234,6 +234,13 @@ elseif TEST_TYPE == 4
     % 95,580 tag applications
     meta_info = 'MovieLens10M';
     
+    if ENV == 1
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/MovieLens10M_train.csv', '/Users/iankuoli/Dataset/MovieLens10M_test.csv', '/Users/iankuoli/Dataset/MovieLens10M_valid.csv');
+    elseif ENV == 2
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/MovieLens10M_train.csv', '/home/iankuoli/dataset/MovieLens10M_test.csv', '/home/iankuoli/dataset/MovieLens10M_valid.csv');
+    else
+    end
+    
     K = 100;
     prior = [0.3, 0.3, 0.3, 0.3, 0.3,...
             0.3, 0.3, 0.3, 0.3, 0.3];
@@ -244,12 +251,7 @@ elseif TEST_TYPE == 4
     topK = [10];
     test_step = 100;
     check_step = 10;
-    if ENV == 1
-        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/MovieLens10M_train.csv', '/Users/iankuoli/Dataset/MovieLens10M_test.csv', '/Users/iankuoli/Dataset/MovieLens10M_valid.csv');
-    elseif ENV == 2
-        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/MovieLens10M_train.csv', '/home/iankuoli/dataset/MovieLens10M_test.csv', '/home/iankuoli/dataset/MovieLens10M_valid.csv');
-    else
-    end
+    
 elseif TEST_TYPE == 5
     % ----- MovieLens 1M Dataset -----
     % 6,040 users
@@ -331,9 +333,18 @@ elseif TEST_TYPE == 5
         check_step = 500;
         
     end  
+    
 elseif TEST_TYPE == 0
     % Read Toy-graph
     meta_info = 'toy';
+    
+    if ENV == 1
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/SmallToy_train.csv', '/Users/iankuoli/Dataset/SmallToy_test.csv', '/Users/iankuoli/Dataset/SmallToy_valid.csv');
+    elseif ENV == 2
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/SmallToy_train.csv', '/home/iankuoli/dataset/SmallToy_test.csv', '/home/iankuoli/dataset/SmallToy_valid.csv');
+    else
+    end
+    
     Ks = [6];
     topK = [5];
     
@@ -411,13 +422,6 @@ elseif TEST_TYPE == 0
         check_step = 10;
         topK = [5];
         
-    end
-    
-    if ENV == 1
-        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/SmallToy_train.csv', '/Users/iankuoli/Dataset/SmallToy_test.csv', '/Users/iankuoli/Dataset/SmallToy_valid.csv');
-    elseif ENV == 2
-        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/SmallToy_train.csv', '/home/iankuoli/dataset/SmallToy_test.csv', '/home/iankuoli/dataset/SmallToy_valid.csv');
-    else
     end
     
 %     matX(find((matX<50) .* (matX>0))) = 1;
