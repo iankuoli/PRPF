@@ -193,6 +193,13 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 [v_pred, i_pred] = sort(vec_predict_X_u);
                 [v_tmp, i_tmp] = sort(i_X);
                 
+                % Compute logisitic(\hat{x}_{ui}) for all nonzero x_{ui}
+                exp_diff_predict_xij_h = exp(-vec_prior_X_u)';
+                partial_1_diff_predict_xij_h = exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h);
+                partial_1_diff_predict_xij_h(isnan(partial_1_diff_predict_xij_h)) = 1;
+                partial_2_diff_predict_xij_h = -exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h) .^ 2;
+                partial_2_diff_predict_xij_h(isnan(partial_2_diff_predict_xij_h)) = 1;
+                
                 %
                 % Select the optimal s_{ui}
                 % Compute partial_1_diff_predict_xij_L, partial_2_diff_predict_xij_L
@@ -201,20 +208,17 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 mat_exp_diff_predictX_u = exp(delta * bsxfun(@plus, vec_predict_X_u', -vec_predict_X_u));
                 mat_logistic_diff_predictX_u = 1 ./ (1+mat_exp_diff_predictX_u);
                 matL_partial_sui = full(C/length(vec_matX_u) * delta * bsxfun(@plus, mat_logistic_diff_predictX_u * (mat_diff_matX_u~=0), -sum(mat_diff_matX_u>0,1)));
+                matL_partial_sui = bsxfun(@plus, matL_partial_sui, alpha * partial_1_diff_predict_xij_h);
                 [partial_1_diff_predict_xij_L, min_idx] = min(matL_partial_sui);
+                
                 vec_s = vec_predict_X_u(min_idx);
+                
                 matL_partial2_sui = -C/length(vec_matX_u) * delta^2 * (mat_logistic_diff_predictX_u .* mat_exp_diff_predictX_u ./ (1+mat_exp_diff_predictX_u)) * (mat_diff_matX_u~=0);
                 partial_2_diff_predict_xij_L = full(sum(matL_partial2_sui .* sparse(min_idx, 1:length(min_idx), ones(length(min_idx),1), length(min_idx), length(min_idx)), 1));
+                partial_2_diff_predict_xij_L = partial_2_diff_predict_xij_L + alpha * partial_2_diff_predict_xij_h(min_idx)';
                 
-                % Compute logisitic(\hat{x}_{ui}) for all nonzero x_{ui}
-                exp_diff_predict_xij_h = exp(-vec_prior_X_u)';
-                partial_1_diff_predict_xij_h = exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h);
-                partial_1_diff_predict_xij_h(isnan(partial_1_diff_predict_xij_h)) = 1;
-                partial_2_diff_predict_xij_h = -exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h) .^ 2;
-                partial_2_diff_predict_xij_h(isnan(partial_2_diff_predict_xij_h)) = 1;
-                
-                l_function_s = (partial_2_diff_predict_xij_L' + alpha * partial_2_diff_predict_xij_h);              
-                h_function_s = (partial_1_diff_predict_xij_L' + alpha * partial_1_diff_predict_xij_h + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
+                l_function_s = partial_2_diff_predict_xij_L';              
+                h_function_s = (partial_1_diff_predict_xij_L' + (0.5 - vec_s') .* l_function_s) + log(vec_prior_X_u)';
 
                 W_tmp = -l_function_s .* exp(h_function_s);
                 W_toosmall_mask = W_tmp <= -1/exp(1);
@@ -572,4 +576,3 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
         end
     end
 end
-
