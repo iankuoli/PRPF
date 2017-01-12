@@ -53,16 +53,16 @@ global best_TestPrecRecall_likelihood
 global best_TestLogLikelihhod
 global bestVlog_likelihood
 
-TEST_TYPE = 5;
-ENV = 1;
+TEST_TYPE = 1;
+ENV = 2;
 models = {'pointPRPF', 'pairPRPF', 'HPF', 'BPR', 'ListPMF', 'LorSLIM', 'RecomMC', 'PMF', 'BPMF', 'NMF', 'LogMF'};
 test_size = 1;
 
-run_model = models{2};
-Ks = [5 20 50 100 150 200 250 300];
-%Ks = [100];
-topK = [5 10 15 20 50 100];
-%topK = [10];
+run_model = models{3};
+%Ks = [5 20 50 100 150 200 250 300];
+Ks = [100];
+%topK = [5 10 15 20 50 100];
+topK = [10];
 initialize = 0;
 
 %% Load Data
@@ -83,13 +83,23 @@ if TEST_TYPE == 1
     if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
         prior = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
         ini_scale = prior(1)/100;
-        batch_size = 100;        
-        MaxItr = 3600;
-        test_step = 20;
-        check_step = 10;
+        
+        %batch_size = 100;        
+        %MaxItr = 3600;
+        %test_step = 20;
+        %check_step = 10;
+        
+        batch_size = 1892;        
+        MaxItr = 180;
+        test_step = 2;
+        check_step = 1;
+        
         kappa = 0.5;
-        delta = 1;
-        alpha = 0.05;
+        %delta = 1;
+        %alpha = 0.05;
+        delta = 0.5;
+        alpha = 1000;
+        C = mean(sum(matX>0,2));
         if strcmp(run_model, 'pairPRPF')
             type_model = 3;
         elseif strcmp(run_model, 'pointPRPF')
@@ -279,8 +289,9 @@ elseif TEST_TYPE == 5
         test_step = 5;
         check_step = 5;
         kappa = 0.5;
+        % delta = 0.5; precision@10 = 0.3287
         delta = 0.5;
-        alpha = 3;
+        alpha = 1000;
         C = mean(sum(matX>0,2));
         if strcmp(run_model, 'pairPRPF')
             type_model = 3;
@@ -357,8 +368,11 @@ elseif TEST_TYPE == 0
         MaxItr = 100;
         test_step = 20;
         check_step = 10;
+        %delta = 0.5;
+        %alpha = 1;
         delta = 0.5;
-        alpha = 1;
+        alpha = 1000;
+        C = mean(sum(matX>0,2));
         if strcmp(run_model, 'pairPRPF')
             type_model = 3;
         elseif strcmp(run_model, 'pointPRPF')
@@ -438,7 +452,7 @@ if strcmp(run_model, 'pointPRPF')
     best_TestPrecRecall_pointPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR3(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
         best_TestPrecRecall_pointPRPF(ik, 1:length(topK)*2) = best_TestPrecRecall_precision;
@@ -455,7 +469,7 @@ if strcmp(run_model, 'pairPRPF')
     best_TestPrecRecall_pairPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR3(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         %LogisticPF(type_model, K, prior, ini_scale, batch_size, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
@@ -473,7 +487,7 @@ if strcmp(run_model, 'HPF')
     best_TestPrecRecall_pairPRPF = zeros(length(Ks), 3*length(topK)*2);
     for ik = 1:length(Ks)
         K = Ks(ik);
-        StochasticCoordinateAscent_PMFR2(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
+        StochasticCoordinateAscent_PMFR3(type_model, K, prior, ini_scale, batch_size, C, alpha, delta, kappa, topK, test_size, test_step, initialize, MaxItr, check_step);
         
         save(strcat(meta_info, '_PMF_batch600_K', K, '_[10]_1000_100_0.1.mat'));
         best_TestPrecRecall_pairPRPF(ik, 1:length(topK)*2) = best_TestPrecRecall_precision;
