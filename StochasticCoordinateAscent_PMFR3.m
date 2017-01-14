@@ -194,7 +194,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 [v_tmp, i_tmp] = sort(i_X);
                 
                 % Compute logisitic(\hat{x}_{ui}) for all nonzero x_{ui}
-                exp_diff_predict_xij_h = exp(-vec_prior_X_u)';
+                exp_diff_predict_xij_h = exp(-vec_predict_X_u)';
                 partial_1_diff_predict_xij_h = exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h);
                 partial_1_diff_predict_xij_h(isnan(partial_1_diff_predict_xij_h)) = 1;
                 partial_2_diff_predict_xij_h = -exp_diff_predict_xij_h ./ (1 + exp_diff_predict_xij_h) .^ 2;
@@ -209,7 +209,9 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 mat_logistic_diff_predictX_u = 1 ./ (1+mat_exp_diff_predictX_u);
                 matL_partial_sui = full(C/length(vec_matX_u) * delta * bsxfun(@plus, mat_logistic_diff_predictX_u * (mat_diff_matX_u~=0), -sum(mat_diff_matX_u>0,1)));
                 matL_partial_sui = bsxfun(@plus, matL_partial_sui, alpha * partial_1_diff_predict_xij_h);
-                [partial_1_diff_predict_xij_L, min_idx] = min(matL_partial_sui);
+                [partial_1_diff_predict_xij_L, min_idx] = min(abs(matL_partial_sui));
+                partial_1_diff_predict_xij_L = full(sum(matL_partial_sui .* sparse(min_idx, 1:length(matL_partial_sui), ones(1,length(matL_partial_sui)), length(matL_partial_sui), length(matL_partial_sui))));
+                %partial_1_diff_predict_xij_L = partial_1_diff_predict_xij_L + alpha * partial_1_diff_predict_xij_h';
                 
                 vec_s = vec_predict_X_u(min_idx);
                 
@@ -566,8 +568,8 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
             idx_show = 32;
             %idx_show = 220;
             tmppp = matTheta(idx_show,:) * matBeta';
-            %plot([tmppp(1,matX_predict(idx_show,:)>0); matX_predict(idx_show,matX_predict(idx_show,:)>0); matX(idx_show, matX_predict(idx_show,:)>0)]');figure(gcf);
-            plot([tmppp(1,matX_predict(idx_show,:)>0); matX_predict(idx_show,matX_predict(idx_show,:)>0)]');figure(gcf);
+            plot([tmppp(1,matX_predict(idx_show,:)>0); matX_predict(idx_show,matX_predict(idx_show,:)>0); matX(idx_show, matX_predict(idx_show,:)>0)]');figure(gcf);
+            %plot([tmppp(1,matX_predict(idx_show,:)>0); matX_predict(idx_show,matX_predict(idx_show,:)>0)]');figure(gcf);
             
             %bbb = [sort(full(matX(u_idx, matX(u_idx, :)>0))); sort(full(vec_prior_X_u)); sort(full(vec_predict_X_u)); sort(full(solution_xui_xuj))]';
             %bbb = bsxfun(@times, bbb, 1./sum(bbb));
