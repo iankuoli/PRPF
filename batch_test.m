@@ -63,18 +63,18 @@ global bestVlog_likelihood
 
 
 
-TEST_TYPE = 6;
-ENV = 4;
+TEST_TYPE = 7;
+ENV = 1;
 models = {'pointPRPF', 'pairPRPF', 'HPF', 'BPR', 'ListPMF', ...
           'LorSLIM', 'RecomMC', 'PMF', 'BPMF', 'NMF', ...
           'LogMF', 'BPNMF'};
 test_size = 1;
 
-run_model = models{5};
+run_model = models{2};
 %Ks = [5 20 50 100 150 200 250 300];
-Ks = [100];
+%Ks = [100];
 %topK = [5 10 15 20 50 100];
-topK = [10];
+%topK = [10];
 initialize = 0;
 
 ini = 1;
@@ -138,7 +138,7 @@ if TEST_TYPE == 1
         lambda_B = 1;
         test_step = 5;
         ini = 1;
-        MaxItr = 2000;
+        MaxItr = 3000;
         check_step = 10;
         
     elseif strcmp(run_model, 'LorSLIM') 
@@ -485,6 +485,102 @@ elseif TEST_TYPE == 6
         kappa = 0.5;   
     end
     
+elseif TEST_TYPE == 7
+    % Read Last.fm 1K user data (User-Item-Word)
+    meta_info = 'LastFm';
+    
+    if ENV == 1           
+        [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/LastFm1K_train.csv', '/Users/iankuoli/Dataset/LastFm1K_test.csv', '/Users/iankuoli/Dataset/LastFm1K_valid.csv');
+    elseif ENV == 2
+        [ M, N ] = LoadUtilities('/home/iankuoli/dataset/LastFm1K_train.csv', '/home/iankuoli/dataset/LastFm1K_test.csv', '/home/iankuoli/dataset/LastFm1K_valid.csv');
+    elseif ENV == 3
+        [ M, N ] = LoadUtilities('/home/csist/Dataset/LastFm1K_train.csv', '/home/csist/Dataset/LastFm1K_test.csv', '/home/csist/Dataset/LastFm1K_valid.csv');
+    elseif ENV == 4
+        [ M, N ] = LoadUtilities('/home/ian/Dataset/LastFm1K_train.csv', '/home/ian/Dataset/LastFm1K_test.csv', '/home/ian/Dataset/LastFm1K_valid.csv');
+    else
+    end
+    
+    if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
+        prior = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
+        ini_scale = prior(1)/100;
+        
+        batch_size = 100;        
+        MaxItr = 100;
+        test_step = 10;
+        check_step = 10;
+        
+        %batch_size = 1892;        
+        %MaxItr = 180;
+        %test_step = 2;
+        %check_step = 1;
+        
+        kappa = 0.5;
+        %delta = 1;
+        %alpha = 0.05;
+        delta = 1;
+        alpha = 1000;
+        C = mean(sum(matX>0,2));
+        if strcmp(run_model, 'pairPRPF')
+            type_model = 3;
+        elseif strcmp(run_model, 'pointPRPF')
+            type_model = -2;
+        elseif strcmp(run_model, 'HPF')
+            type_model = 0;
+        end
+
+    elseif strcmp(run_model, 'BPR')
+        lr = 0.2;       % learning rate
+        lambda = 0;     % regularization weight
+        prior = [0.3 0.3];
+        ini_scale = prior(1)/100;
+        Itr_step = 2000;
+        MaxItr = 2500 * Itr_step;
+        
+    elseif strcmp(run_model, 'ListPMF')      
+        lambda   = 0.001;
+        lambda_Theta = 1;
+        lambda_Beta = 1;
+        lambda_B = 1;
+        test_step = 5;
+        ini = 1;
+        MaxItr = 3000;
+        check_step = 10;
+        
+    elseif strcmp(run_model, 'LorSLIM') 
+        tol = 10e-3;
+        maxIter = 1000;
+        z = 5;
+        ro = 3;
+        lambda = 8;
+        beta = 10;
+        
+    elseif strcmp(run_model, 'RecomMC')
+        mu = 10;
+        rho = 1;
+        
+    elseif strcmp(run_model, 'PMF') || strcmp(run_model, 'BPMF')
+        batch_size = 2000;
+        maxepoch = 1000;
+        lr = 10;
+        regular_param = 0.01;
+        
+    elseif strcmp(run_model, 'NMF')
+    
+    elseif strcmp(run_model, 'LogMF')
+        prior = [0.3, 0.3];
+        ini_scale = prior(1)/100;
+        usr_batch_size = 100;
+        %lr = 0.0001;
+        lr = 0.000001;
+        lambda = 0;
+        alpha = 1;
+        test_step = 800;
+        ini = 1;
+        MaxItr = 5000;
+        check_step = 400;
+        
+    end
+    
 elseif TEST_TYPE == 0
     % Read Toy-graph
     meta_info = 'toy';
@@ -493,12 +589,15 @@ elseif TEST_TYPE == 0
         [ M, N ] = LoadUtilities('/Users/iankuoli/Dataset/SmallToy_train.csv', '/Users/iankuoli/Dataset/SmallToy_test.csv', '/Users/iankuoli/Dataset/SmallToy_valid.csv');
     elseif ENV == 2
         [ M, N ] = LoadUtilities('/home/iankuoli/dataset/SmallToy_train.csv', '/home/iankuoli/dataset/SmallToy_test.csv', '/home/iankuoli/dataset/SmallToy_valid.csv');
+    elseif ENV == 3
+        [ M, N ] = LoadUtilities('/home/csist/Dataset/SmallToy_train.csv', '/home/csist/Dataset/SmallToy_test.csv', '/home/csist/Dataset/SmallToy_valid.csv');
+    elseif ENV == 4
     else
         [ M, N ] = LoadUtilities('SmallToy_train.csv', 'SmallToy_test.csv', 'SmallToy_valid.csv');
     end
     
     Ks = [6];
-    topK = [5];
+    topK = [1 2 3 4 5];
     
     if strcmp(run_model, 'pointPRPF') || strcmp(run_model, 'pairPRPF') || strcmp(run_model, 'HPF')
         prior = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
@@ -532,12 +631,12 @@ elseif TEST_TYPE == 0
         
     elseif strcmp(run_model, 'ListPMF')
         lambda   = 0.01;
-        lambda_Theta = 0.1;
-        lambda_Beta = 0.1;
-        lambda_B = 0.1;
+        lambda_Theta = 0.0001;
+        lambda_Beta = 0.0001;
+        lambda_B = 0.0001;
         test_step = 10;
         ini = 1;
-        MaxItr = 30000;
+        MaxItr = 3000;
         check_step = 10;
     
     elseif strcmp(run_model, 'LorSLIM') 
@@ -557,6 +656,8 @@ elseif TEST_TYPE == 0
         maxepoch = 1000;
         lr = 10;
         regular_param = 0.1;
+        check_step = 1;
+        test_step = 1;
         
     elseif strcmp(run_model, 'NMF')
         
@@ -583,12 +684,12 @@ elseif TEST_TYPE == 0
         check_step = 10;       
         kappa = 0.5;   
     end
-%     
-    matX(find((matX<50) .* (matX>0))) = 1;
-    matX(find((matX<100) .* (matX>=50))) = 2;
-    matX(find((matX<150) .* (matX>=100))) = 3;
-    matX(find((matX<200) .* (matX>=150))) = 4;
-    matX(find(matX>=200)) = 5;
+    
+%     matX(find((matX<50) .* (matX>0))) = 1;
+%     matX(find((matX<100) .* (matX>=50))) = 2;
+%     matX(find((matX<150) .* (matX>=100))) = 3;
+%     matX(find((matX<200) .* (matX>=150))) = 4;
+%     matX(find(matX>=200)) = 5;
 end
 
 %matX = [5 1 0; 3.1 3 0; 0.4 5 0.5; 0 1 5];
@@ -741,7 +842,7 @@ if strcmp(run_model, 'LogMF')
 end
 
 %
-% LogMF -- Logistic Matrix Factorization, NIPS, 2014
+% BPNMF -- Logistic Matrix Factorization, NIPS, 2014
 %
 if strcmp(run_model, 'BPNMF')
     best_TestPrecRecall_BPNMF = zeros(length(Ks), length(topK)*2);

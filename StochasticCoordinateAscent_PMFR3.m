@@ -418,6 +418,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
             list_vecRecall = zeros(1, length(topK));
             Tlog_likelihood = 0;
             step_size = 3000;
+            denominator = 0;
             
             parfor j = 1:4%ceil(length(test_usr_idx)/step_size)
                 range_step = (1 + (j-1) * step_size):min(j*step_size, length(test_usr_idx));
@@ -427,23 +428,28 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 test_matPredict = test_matPredict - test_matPredict .* (matX(test_usr_idx(range_step), :) > 0);
                 [vec_precision, vec_recall] = MeasurePrecisionRecall(matX_test(test_usr_idx(range_step), :), test_matPredict, topK);
                 
-                %list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
-                %list_vecRecall = list_vecRecall + sum(vec_recall, 1);
-                %Tlog_likelihood = Tlog_likelihood + DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                % ----- single processor -----
+                list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
+                list_vecRecall = list_vecRecall + sum(vec_recall, 1);
+                Tlog_likelihood = Tlog_likelihood + DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                denominator = denominator + length(range_step);
                 
-                veclist_vecPrecision(j) = sum(vec_precision, 1);
-                veclist_vecRecall(j) = sum(vec_recall, 1);
-                vecTlog_likelihood(j) = DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                % ----- multi processor -----
+                %veclist_vecPrecision(j) = sum(vec_precision, 1);
+                %veclist_vecRecall(j) = sum(vec_recall, 1);
+                %vecTlog_likelihood(j) = DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                %vecDonominator(j) = length(range_step);
             end
+            % ----- single processor -----
+            test_precision = list_vecPrecision / denominator;
+            test_recall = list_vecRecall / denominator;
+            Tlog_likelihood = Tlog_likelihood / nnz(matX_test);
             
-            %test_precision = list_vecPrecision / length(test_usr_idx);
-            %test_recall = list_vecRecall / length(test_usr_idx);
-            %Tlog_likelihood = Tlog_likelihood / nnz(matX_test);
+            % ----- multi processor -----
+            %test_precision = sum(veclist_vecPrecision) / sum(vecDonominator);
+            %test_recall = sum(veclist_vecRecall) / sum(vecDonominator);
+            %Tlog_likelihood = sum(vecTlog_likelihood) / nnz(matX_test);
             
-            test_precision = sum(veclist_vecPrecision) / length(test_usr_idx);
-            test_recall = sum(veclist_vecRecall) / length(test_usr_idx);
-            Tlog_likelihood = sum(vecTlog_likelihood) / nnz(matX_test);
-                    
             list_TestPrecRecall(i/test_step, :) = [test_precision test_recall];
             
         else
@@ -461,6 +467,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
             list_vecRecall = zeros(1, length(topK));
             Vlog_likelihood = 0;
             step_size = 3000;
+            denominator = 0;
             
             parfor j = 1:4%ceil(length(valid_usr_idx)/step_size)
                 range_step = (1 + (j-1) * step_size):min(j*step_size, length(valid_usr_idx));
@@ -470,21 +477,27 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                 valid_matPredict = valid_matPredict - valid_matPredict .* (matX(valid_usr_idx(range_step), :) > 0);
                 [vec_precision, vec_recall] = MeasurePrecisionRecall(matX_valid(valid_usr_idx(range_step), :), valid_matPredict, topK);
                 
-                %list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
-                %list_vecRecall = list_vecRecall + sum(vec_recall, 1);
-                %Vlog_likelihood = Vlog_likelihood + DistributionPoissonLogNZ(matX_valid(valid_usr_idx(range_step), :), valid_matPredict);
+                % ----- single processor -----
+                list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
+                list_vecRecall = list_vecRecall + sum(vec_recall, 1);
+                Vlog_likelihood = Vlog_likelihood + DistributionPoissonLogNZ(matX_valid(valid_usr_idx(range_step), :), valid_matPredict);
+                denominator = denominator + length(range_step);
                 
-                veclist_vecPrecision(j) = sum(vec_precision, 1);
-                veclist_vecRecall(j) = sum(vec_recall, 1);
-                vecVlog_likelihood(j) = DistributionPoissonLogNZ(matX_valid(valid_usr_idx(range_step), :), valid_matPredict);
+                % ----- multi processor -----
+                %veclist_vecPrecision(j) = sum(vec_precision, 1);
+                %veclist_vecRecall(j) = sum(vec_recall, 1);
+                %vecVlog_likelihood(j) = DistributionPoissonLogNZ(matX_valid(valid_usr_idx(range_step), :), valid_matPredict);
+                %vecDonominator(j) = length(range_step);
             end
-            %valid_precision = list_vecPrecision / length(valid_usr_idx);
-            %valid_recall = list_vecRecall / length(valid_usr_idx);
-            %Vlog_likelihood = Vlog_likelihood / nnz(matX_valid);
+            % ----- single processor -----
+            valid_precision = list_vecPrecision / denominator;
+            valid_recall = list_vecRecall / denominator;
+            Vlog_likelihood = Vlog_likelihood / nnz(matX_valid);
             
-            valid_precision = sum(veclist_vecPrecision) / length(valid_usr_idx);
-            valid_recall = sum(veclist_vecRecall) / length(valid_usr_idx);
-            Vlog_likelihood = sum(vecVlog_likelihood) / nnz(matX_valid);
+            % ----- multi processor -----
+            %valid_precision = sum(veclist_vecPrecision) / sum(vecDonominator);
+            %valid_recall = sum(veclist_vecRecall) / sum(vecDonominator);
+            %Vlog_likelihood = sum(vecVlog_likelihood) / nnz(matX_valid);
             
             list_ValidPrecRecall(i/check_step, :) = [valid_precision valid_recall];
             list_ValidLogLikelihhod(i/check_step) = Vlog_likelihood;
@@ -513,6 +526,7 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                     list_vecRecall = zeros(1, length(topK));
                     Tlog_likelihood = 0;
                     step_size = 3000;
+                    denominator = 0;
 
                     parfor j = 1:4%ceil(length(test_usr_idx)/step_size)
                         range_step = (1 + (j-1) * step_size):min(j*step_size, length(test_usr_idx));
@@ -522,22 +536,27 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
                         test_matPredict = test_matPredict - test_matPredict .* (matX(test_usr_idx(range_step), :) > 0);
                         [vec_precision, vec_recall] = MeasurePrecisionRecall(matX_test(test_usr_idx(range_step), :), test_matPredict, topK);
                         
-                        %list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
-                        %list_vecRecall = list_vecRecall + sum(vec_recall, 1);
-                        %Tlog_likelihood = Tlog_likelihood + DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                        % ----- single processor -----
+                        list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
+                        list_vecRecall = list_vecRecall + sum(vec_recall, 1);
+                        Tlog_likelihood = Tlog_likelihood + DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                        denominator = denominator + length(range_step);
                         
-                        veclist_vecPrecision(j) = sum(vec_precision, 1);
-                        veclist_vecRecall(j) = sum(vec_recall, 1);
-                        vecTlog_likelihood(j) = DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                        % ----- multi processor -----
+                        %veclist_vecPrecision(j) = sum(vec_precision, 1);
+                        %veclist_vecRecall(j) = sum(vec_recall, 1);
+                        %vecTlog_likelihood(j) = DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
+                        %vecDonominator(j) = length(range_step);
                     end
-
-                    %test_precision = list_vecPrecision / length(test_usr_idx);
-                    %test_recall = list_vecRecall / length(test_usr_idx);
-                    %Tlog_likelihood = Tlog_likelihood / nnz(matX_test);
+                    % ----- single processor -----
+                    test_precision = list_vecPrecision / denominator;
+                    test_recall = list_vecRecall / denominator;
+                    Tlog_likelihood = Tlog_likelihood / nnz(matX_test);
             
-                    test_precision = sum(veclist_vecPrecision) / length(test_usr_idx);
-                    test_recall = sum(veclist_vecRecall) / length(test_usr_idx);
-                    Tlog_likelihood = sum(vecTlog_likelihood) / nnz(matX_test);
+                    % ----- multi processor -----
+                    %test_precision = sum(veclist_vecPrecision) / sum(vecDonominator);
+                    %test_recall = sum(veclist_vecRecall) / sum(vecDonominator);
+                    %Tlog_likelihood = sum(vecTlog_likelihood) / nnz(matX_test);
                     
                     if bestVlog_likelihood < Vlog_likelihood
                         best_TestPrecRecall_likelihood = [test_precision, test_recall];
@@ -638,16 +657,20 @@ function [matClusteringRes] = StochasticCoordinateAscent_PMFR3(type_model, k, pr
         test_matPredict = bestTheta(test_usr_idx(range_step),:) * bestBeta';
         test_matPredict = test_matPredict - test_matPredict .* (matX(test_usr_idx(range_step), :) > 0);
         [vec_precision, vec_recall] = MeasurePrecisionRecall(matX_test(test_usr_idx(range_step), :), test_matPredict, topK);
-        veclist_vecPrecision(j) = sum(vec_precision, 1);
-        veclist_vecRecall(j) = sum(vec_recall, 1);
-
-        % Compute the log likelihood
-        vecTlog_likelihood(j) = DistributionPoissonLogNZ(matX_test(test_usr_idx(range_step), :), test_matPredict);
         
+        list_vecPrecision = list_vecPrecision + sum(vec_precision, 1);
+        list_vecRecall = list_vecRecall + sum(vec_recall, 1);
+        
+        %veclist_vecPrecision(j) = sum(vec_precision, 1);
+        %veclist_vecRecall(j) = sum(vec_recall, 1);        
     end
-    test_precision = sum(veclist_vecPrecision) / length(test_usr_idx);
-    test_recall = sum(veclist_vecRecall) / length(test_usr_idx);
-    Tlog_likelihood = sum(vecTlog_likelihood) / nnz(matX_test);
+    
+    test_precision = list_vecPrecision / length(test_usr_idx);
+    test_recall = list_vecRecall / length(test_usr_idx);
+                    
+    %test_precision = sum(veclist_vecPrecision) / length(test_usr_idx);
+    %test_recall = sum(veclist_vecRecall) / length(test_usr_idx);
+    
     best_TestPrecRecall_likelihood = [test_precision, test_recall];
     best_TestPrecRecall_precision = [test_precision, test_recall];
     bestTheta = matTheta;
