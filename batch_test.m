@@ -63,17 +63,17 @@ global bestVlog_likelihood
 
 
 
-TEST_TYPE = 7;
-ENV = 1;
+TEST_TYPE = 5;
+ENV = 3;
 models = {'pointPRPF', 'pairPRPF', 'HPF', 'BPR', 'ListPMF', ...
           'LorSLIM', 'RecomMC', 'PMF', 'BPMF', 'NMF', ...
           'LogMF', 'BPNMF'};
 test_size = 1;
 
-run_model = models{2};
-%Ks = [5 20 50 100 150 200 250 300];
+run_model = models{4};
+Ks = [5 20 50 100 150 200 250 300];
 %Ks = [100];
-%topK = [5 10 15 20 50 100];
+topK = [5 10 15 20 50 100];
 %topK = [10];
 initialize = 0;
 
@@ -333,22 +333,22 @@ elseif TEST_TYPE == 5
         end
 
     elseif strcmp(run_model, 'BPR')
-        lr = 0.2;       % learning rate
-        lambda = 0;     % regularization weight
+        lr = 0.1;       % learning rate
+        lambda = 0.001;     % regularization weight
         prior = [0.3 0.3];
         ini_scale = prior(1)/100;
         Itr_step = 2000;
-        MaxItr = 2500 * Itr_step;
+        MaxItr = 1000 * Itr_step;
         
     elseif strcmp(run_model, 'ListPMF')
-        lambda   = 0.01;
+        lambda   = 0.001;
         lambda_Theta = 0.1;
         lambda_Beta = 0.1;
         lambda_B = 0.1;
-        test_step = 10;
+        test_step = 5;
         ini = 1;
-        MaxItr = 30000;
-        check_step = 10;
+        MaxItr = 200;
+        check_step = 5;
         
     elseif strcmp(run_model, 'LorSLIM') 
         tol = 10e-3;
@@ -427,6 +427,12 @@ elseif TEST_TYPE == 6
         end
 
     elseif strcmp(run_model, 'BPR')
+%         lr = 1/nnz(matX);       % learning rate
+%         lambda = 0.0025;     % regularization weight
+%         prior = [0.3 0.3];
+%         ini_scale = prior(1)/100;
+%         Itr_step = 2000;
+%         MaxItr = 400 * Itr_step;
         lr = 0.2;       % learning rate
         lambda = 0;     % regularization weight
         prior = [0.3 0.3];
@@ -436,13 +442,13 @@ elseif TEST_TYPE == 6
         
     elseif strcmp(run_model, 'ListPMF')
         lambda   = 0.001;
-        lambda_Theta = 1;
-        lambda_Beta = 1;
-        lambda_B = 0.001;
-        test_step = 1;
+        lambda_Theta = 0.01;
+        lambda_Beta = 0.01;
+        lambda_B = 0.01;
+        test_step = 5;
         ini = 1;
-        MaxItr = 2000;
-        check_step = 1;
+        MaxItr = 200;
+        check_step = 5;
         
     elseif strcmp(run_model, 'LorSLIM') 
         tol = 10e-3;
@@ -504,10 +510,10 @@ elseif TEST_TYPE == 7
         prior = [0.3, 0.3, 0.3, 0.3, 0.3, 0.3];
         ini_scale = prior(1)/100;
         
-        batch_size = 100;        
-        MaxItr = 100;
-        test_step = 10;
-        check_step = 10;
+        batch_size = 992;        
+        MaxItr = 60;
+        test_step = 5;
+        check_step = 5;
         
         %batch_size = 1892;        
         %MaxItr = 180;
@@ -529,22 +535,22 @@ elseif TEST_TYPE == 7
         end
 
     elseif strcmp(run_model, 'BPR')
-        lr = 0.2;       % learning rate
-        lambda = 0;     % regularization weight
+        lr = 1/nnz(matX);   % learning rate
+        lambda = 0.001;     % regularization weight
         prior = [0.3 0.3];
         ini_scale = prior(1)/100;
         Itr_step = 2000;
-        MaxItr = 2500 * Itr_step;
+        MaxItr = 100 * Itr_step;
         
     elseif strcmp(run_model, 'ListPMF')      
-        lambda   = 0.001;
-        lambda_Theta = 1;
-        lambda_Beta = 1;
-        lambda_B = 1;
+        lambda   = 0.01;
+        lambda_Theta = 0.1;
+        lambda_Beta = 0.1;
+        lambda_B = 0.1;
         test_step = 5;
         ini = 1;
-        MaxItr = 3000;
-        check_step = 10;
+        MaxItr = 40;
+        check_step = 5;
         
     elseif strcmp(run_model, 'LorSLIM') 
         tol = 10e-3;
@@ -622,8 +628,8 @@ elseif TEST_TYPE == 0
         end
 
     elseif strcmp(run_model, 'BPR')
-        lr = 0.2;       % learning rate
-        lambda = 0;     % regularization weight
+        lr = 0.1;       % learning rate
+        lambda = 0.001;     % regularization weight
         prior = [0.3 0.3];
         ini_scale = prior(1)/100;
         Itr_step = 2000;
@@ -631,13 +637,13 @@ elseif TEST_TYPE == 0
         
     elseif strcmp(run_model, 'ListPMF')
         lambda   = 0.01;
-        lambda_Theta = 0.0001;
-        lambda_Beta = 0.0001;
-        lambda_B = 0.0001;
-        test_step = 10;
+        lambda_Theta = 0.01;
+        lambda_Beta = 0.01;
+        lambda_B = 0.01;
+        test_step = 1;
         ini = 1;
         MaxItr = 3000;
-        check_step = 10;
+        check_step = 1;
     
     elseif strcmp(run_model, 'LorSLIM') 
         tol = 10e-3;
@@ -685,11 +691,11 @@ elseif TEST_TYPE == 0
         kappa = 0.5;   
     end
     
-%     matX(find((matX<50) .* (matX>0))) = 1;
-%     matX(find((matX<100) .* (matX>=50))) = 2;
-%     matX(find((matX<150) .* (matX>=100))) = 3;
-%     matX(find((matX<200) .* (matX>=150))) = 4;
-%     matX(find(matX>=200)) = 5;
+    matX(find((matX<50) .* (matX>0))) = 1;
+    matX(find((matX<100) .* (matX>=50))) = 2;
+    matX(find((matX<150) .* (matX>=100))) = 3;
+    matX(find((matX<200) .* (matX>=150))) = 4;
+    matX(find(matX>=200)) = 5;
 end
 
 %matX = [5 1 0; 3.1 3 0; 0.4 5 0.5; 0 1 5];
@@ -774,7 +780,7 @@ if strcmp(run_model, 'ListPMF')
         %ListProbMF(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         %ListProbMF1(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         %ListProbMF2(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
-        ListPMF_LP_bias1(K, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, test_step, ini, MaxItr, check_step);
+        ListPMF_LP_bias2(K, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, test_step, ini, MaxItr, check_step);
         %ListrankMF(K, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         best_TestPrecRecall_ListPMF(ik, :) = best_TestPrecRecall_precision;
     end
