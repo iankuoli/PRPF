@@ -89,14 +89,19 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
             %e_p_M = exp(-sum(matTheta_m .* matBeta_m,2));
             f_m = zeros(numel(train_PI{i}), 1);
             
-            if e_p_M > 10e10
-                tmp0 = 0;
-                tmp1 = 1;
-                tmp2 = 0;
-            else
-                tmp0 = 1 ./ (1 + e_p_M);    % 1 ./ (1 + e_p_M)
-                tmp1 = e_p_M .* tmp0;       % e_p_M ./ (1 + e_p_M)
-                tmp2 = tmp0 .* tmp1;        % e_p_M ./ ((1 + e_p_M).^2)
+            tmp0 = zeros(1, length(e_p_M));
+            tmp1 = zeros(1, length(e_p_M));
+            tmp2 = zeros(1, length(e_p_M));
+            for j = 1:length(e_p_M)
+                if e_p_M(j) > 10e10
+                    tmp0(j) = 0;
+                    tmp1(j) = 1;
+                    tmp2(j) = 0;
+                else
+                    tmp0(j) = 1 / (1 + e_p_M(j));    % 1 ./ (1 + e_p_M)
+                    tmp1(j) = e_p_M(j) * tmp0(j);    % e_p_M ./ (1 + e_p_M)
+                    tmp2(j) = tmp0(j) * tmp1(j);     % e_p_M ./ ((1 + e_p_M).^2)
+                end
             end
             
             tmp_buff = [];
