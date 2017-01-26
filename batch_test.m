@@ -70,11 +70,11 @@ models = {'pointPRPF', 'pairPRPF', 'HPF', 'BPR', 'ListPMF', ...
           'LogMF', 'BPNMF'};
 test_size = 1;
 
-run_model = models{4};
-Ks = [5 20 50 100 150 200 250 300];
-%Ks = [100];
-topK = [5 10 15 20 50 100];
-%topK = [10];
+run_model = models{5};
+%Ks = [5 20 50 100 150 200 250 300];
+Ks = [100];
+%topK = [5 10 15 20 50 100];
+topK = [10];
 initialize = 0;
 
 ini = 1;
@@ -341,7 +341,7 @@ elseif TEST_TYPE == 5
         MaxItr = 1000 * Itr_step;
         
     elseif strcmp(run_model, 'ListPMF')
-        lambda   = 0.001;
+        lambda   = 0.01;
         lambda_Theta = 0.1;
         lambda_Beta = 0.1;
         lambda_B = 0.1;
@@ -780,7 +780,7 @@ if strcmp(run_model, 'ListPMF')
         %ListProbMF(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         %ListProbMF1(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         %ListProbMF2(K, prior, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
-        ListPMF_LP_bias2(K, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, test_step, ini, MaxItr, check_step);
+        ListPMF_LP_bias3(K, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, test_step, ini, MaxItr, check_step);
         %ListrankMF(K, ini_scale, usr_batch_size, lr, lambda, topK, test_size, test_step, ini, MaxItr, check_step);
         best_TestPrecRecall_ListPMF(ik, :) = best_TestPrecRecall_precision;
     end
