@@ -92,15 +92,18 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
             tmp0 = zeros(1, length(e_p_M));
             tmp1 = zeros(1, length(e_p_M));
             tmp2 = zeros(1, length(e_p_M));
+            tmp3 = zeros(1, length(e_p_M));
             for j = 1:length(e_p_M)
                 if e_p_M(j) > 10e10
                     tmp0(j) = 0;
                     tmp1(j) = 1;
                     tmp2(j) = 0;
+                    tmp3(j) = -sum(matTheta_m .* matBeta_m, 2) - vecBias(i);
                 else
                     tmp0(j) = 1 / (1 + e_p_M(j));    % 1 ./ (1 + e_p_M)
                     tmp1(j) = e_p_M(j) * tmp0(j);    % e_p_M ./ (1 + e_p_M)
                     tmp2(j) = tmp0(j) * tmp1(j);     % e_p_M ./ ((1 + e_p_M).^2)
+                    tmp3(j) = log(1 + e_p_M(j));
                 end
             end
             
@@ -132,7 +135,7 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
                         f_m(iidx) = f_m(iidx) + tmp1(j);
 
                         % for target function
-                        train_err(epoch) = train_err(epoch) - log(1 + e_p_M(j)) - log(p_s);
+                        train_err(epoch) = train_err(epoch) - tmp3(j) - log(p_s);
                     end
                     
                     tmp_buff = [];
