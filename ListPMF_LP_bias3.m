@@ -123,7 +123,14 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
 
                         % for user matrix U
                         d_p_w = d_p_w + matBeta(item_id,:) * tmp2(j);
-                        d_P(i,:) = d_P(i,:) + matBeta(item_id,:) * tmp1(j) - d_p_w / p_s;
+                       
+                        if p_s == 0
+                            tmp4 = 1;
+                        else
+                            tmp4 = d_p_w / p_s;
+                        end
+                        
+                        d_P(i,:) = d_P(i,:) + matBeta(item_id,:) * tmp1(j) - tmp4;
 
                         %for bias vector B
                         d_p_b = d_p_b + tmp2(j);
