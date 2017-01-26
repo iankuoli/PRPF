@@ -85,7 +85,8 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
 
             matTheta_m = repmat(matTheta(i,:), [numel(train_PI{i}),1]);
             matBeta_m = matBeta(train_PI{i},:);
-            e_p_M = exp(-sum(matTheta_m .* matBeta_m, 2) - vecBias(i));
+            p_M = -sum(matTheta_m .* matBeta_m, 2) - vecBias(i);
+            e_p_M = exp(p_M);
             %e_p_M = exp(-sum(matTheta_m .* matBeta_m,2));
             f_m = zeros(numel(train_PI{i}), 1);
             
@@ -98,12 +99,12 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
                     tmp0(j) = 0;
                     tmp1(j) = 1;
                     tmp2(j) = 0;
-                    tmp3(j) = -sum(matTheta_m .* matBeta_m, 2) - vecBias(i);
+                    tmp3(j) = p_M(j);
                 else
                     tmp0(j) = 1 / (1 + e_p_M(j));    % 1 ./ (1 + e_p_M)
                     tmp1(j) = e_p_M(j) * tmp0(j);    % e_p_M ./ (1 + e_p_M)
                     tmp2(j) = tmp0(j) * tmp1(j);     % e_p_M ./ ((1 + e_p_M).^2)
-                    tmp3(j) = log(1 + e_p_M(j));
+                    tmp3(j) = log(1 + e_p_M(j));     % e_p_M ./ ((1 + e_p_M).^2)
                 end
             end
             
@@ -143,6 +144,16 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
 
             end
             
+            if sum(sum(isnan(d_P)))>0
+                fprintf('\nFUCKKKKKKKKKKK ...');
+            end
+            if sum(sum(isnan(d_B)))>0
+                fprintf('\nFUCKKKKKKKKKKK ...');
+            end
+            if sum(sum(isnan(f_m)))>0
+                fprintf('\nFUCKKKKKKKKKKK ...');
+            end
+        
             d_M(train_PI{i},:) = d_M(train_PI{i},:) + matTheta_m .* repmat(f_m,[1,K]);
         end
 
