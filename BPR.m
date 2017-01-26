@@ -38,8 +38,8 @@ function [matClusteringRes] = BPR(k, lr, lambda, prior, ini_scale, topK, test_si
     prior_theta = prior(1);
     prior_beta = prior(2);
     
-    matTheta = ini_scale * rand(M, K) + prior_theta;
-    matBeta = ini_scale * rand(N, K) + prior_beta;
+    matTheta = ini_scale * rand(M, K) - 0.5 * ini_scale;% + prior_theta;
+    matBeta = ini_scale * rand(N, K) - 0.5 * ini_scale;% + prior_beta;
 
     zero_idx_usr = sum(matX,2)==0;
     matTheta(zero_idx_usr(:,1),:) = 0;
@@ -64,18 +64,25 @@ function [matClusteringRes] = BPR(k, lr, lambda, prior, ini_scale, topK, test_si
         j_idx = randsample(find(matX(u_idx, :)==0),1);
         
         x_cap_uij = matTheta(u_idx,:) * (matBeta(i_idx,:) - matBeta(j_idx, :))';
-        tmp_uij = exp(-x_cap_uij) / (1+exp(-x_cap_uij));
+        tmp_uij = 1 / (1 + exp(x_cap_uij));
+        tmp_uij(isnan(tmp_uij))=1;
         
         %
         % Update matTheta
         %
-        matTheta(u_idx,:) = matTheta(u_idx,:) + lr * (tmp_uij * (matBeta(i_idx,:) - matBeta(j_idx,:)) + lambda * matTheta(u_idx,:));
+        matTheta(u_idx,:) = matTheta(u_idx,:) + lr * (tmp_uij * (matBeta(i_idx,:) - matBeta(j_idx,:)) - lambda * matTheta(u_idx,:));
+        if sum(sum(isnan(matTheta)))>0
+            fprintf('\nFUCKKKKKKKKKKK ...');
+        end
 
         %
         % Update matBeta
         %
-        matBeta(i_idx,:) = matBeta(i_idx,:) + lr * (tmp_uij * matTheta(u_idx,:) + lambda * matBeta(i_idx,:));
-        matBeta(j_idx,:) = matBeta(j_idx,:) + lr * (tmp_uij * (-matTheta(u_idx,:)) + lambda * matBeta(j_idx,:));
+        matBeta(i_idx,:) = matBeta(i_idx,:) + lr * (tmp_uij * matTheta(u_idx,:) - lambda * matBeta(i_idx,:));
+        matBeta(j_idx,:) = matBeta(j_idx,:) + lr * (tmp_uij * (-matTheta(u_idx,:)) - lambda * matBeta(j_idx,:));
+        if sum(sum(isnan(matBeta)))>0
+            fprintf('\nFUCKKKKKKKKKKK ...');
+        end
         
         
         if mod(ii, Itr_step) ~=0
@@ -225,7 +232,7 @@ function [matClusteringRes] = BPR(k, lr, lambda, prior, ini_scale, topK, test_si
             fprintf('\nObjFunc: %f \n', obj_func);
         end
         
-        if mod(i,10) == 0
+        if mod(i,50) == 0
             plot(matTheta(1:50,:)');figure(gcf);
             %bbb = [sort(full(matX(u_idx, matX(u_idx, :)>0))); sort(full(vec_prior_X_u)); sort(full(vec_predict_X_u)); sort(full(solution_xui_xuj))]';
             %bbb = bsxfun(@times, bbb, 1./sum(bbb));
