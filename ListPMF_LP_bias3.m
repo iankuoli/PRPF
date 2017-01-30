@@ -66,7 +66,9 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
         [sort_val, sort_idx] = sort(val, 'descend');
         train_PI{i} = idx_y(sort_idx);
     end
-    
+    epoch = 1;
+    maxepoch = MaxItr;
+    train_err = zeros(1, maxepoch);
     for epoch = epoch:maxepoch
 
         t1 = cputime;    
@@ -78,7 +80,7 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
         d_B = zeros(M,1);
         d_M = zeros(N,K);
         for i = 1:M
-            p_s = 0;
+            p_s = 10e-4;
             d_p_w = zeros(1,K);
             d_m_w = zeros(1,K);
             d_p_b = 0;
@@ -104,7 +106,7 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
                     tmp0(j) = 1 / (1 + e_p_M(j));    % 1 ./ (1 + e_p_M)
                     tmp1(j) = e_p_M(j) * tmp0(j);    % e_p_M ./ (1 + e_p_M)
                     tmp2(j) = tmp0(j) * tmp1(j);     % e_p_M ./ ((1 + e_p_M).^2)
-                    tmp3(j) = log(1 + e_p_M(j));     % e_p_M ./ ((1 + e_p_M).^2)
+                    tmp3(j) = log(1 + e_p_M(j));     % p_M
                 end
             end
             
@@ -126,24 +128,32 @@ function ListPMF_LP_bias3(k, lambda, lambda_Theta, lambda_Beta, lambda_B, topK, 
                        
                         if p_s == 0
                             tmp4 = 1;
+                            tmp5 = 1;
                         else
                             tmp4 = d_p_w / p_s;
+                            tmp5 = d_p_b / p_s;
                         end
                         
                         d_P(i,:) = d_P(i,:) + matBeta(item_id,:) * tmp1(j) - tmp4;
 
                         %for bias vector B
                         d_p_b = d_p_b + tmp2(j);
-                        d_B(i) = d_B(i) + tmp1(j) - d_p_b / p_s;
+                        d_B(i) = d_B(i) + tmp1(j) - tmp5;
 
                         % for item matrix V
                         for k = j:numel(train_PI{i})
-                           f_m(k) = f_m(k) - tmp2(k) / p_s;
+                           if p_s ~= 0
+                               f_m(k) = f_m(k) - tmp2(k) / p_s;
+                           end
                         end
                         f_m(iidx) = f_m(iidx) + tmp1(j);
 
                         % for target function
                         train_err(epoch) = train_err(epoch) - tmp3(j) - log(p_s);
+                        
+                        if sum(sum(isnan(train_err(epoch))))>0
+                            fprintf('\nFUCKKKKKKKKKKK ...');
+                        end
                     end
                     
                     tmp_buff = [];
